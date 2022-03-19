@@ -1,0 +1,2 @@
+cd ..
+cdk destroy -vv
