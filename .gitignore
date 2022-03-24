@@ -2,3 +2,4 @@
 cdk.out
 target
 aws-cli-stacks.iml
+mykey.pem
