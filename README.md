@@ -15,4 +15,8 @@ It is a [Maven](https://maven.apache.org/) based project, so you can open this p
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
 
+# SSH into an ec2 instance:
+`chmod 400 mykey.pem`
+`ssh -i "mykey.pem" ec2-user@ec2-3-25-51-101.ap-southeast-2.compute.amazonaws.com`
+
 Enjoy!

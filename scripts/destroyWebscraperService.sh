@@ -1,2 +1,2 @@
 cd ..
-yes | cdk destroy -vv --force WebscraperService-ECSEC2
+yes | cdk destroy -vv --force WebscraperService-ALBECSEC2

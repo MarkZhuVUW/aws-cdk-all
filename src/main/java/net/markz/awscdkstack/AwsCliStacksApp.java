@@ -1,11 +1,10 @@
 package net.markz.awscdkstack;
 
+import net.markz.awscdkstack.constants.AWSConstants;
 import net.markz.awscdkstack.services.ServiceProvider;
 import software.amazon.awscdk.App;
 import software.amazon.awscdk.Environment;
 import software.amazon.awscdk.StackProps;
-
-import java.util.Arrays;
 
 public class AwsCliStacksApp {
     public static void main(final String[] args) {
@@ -26,14 +25,14 @@ public class AwsCliStacksApp {
                 // want to deploy the stack to.
 
                 .env(Environment.builder()
-                        .account("142621353074")
-                        .region("ap-southeast-2")
+                        .account(AWSConstants.ACCOUNT.getStr())
+                        .region(AWSConstants.REGION.getStr())
                         .build())
                 // For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
                 .build();
 
-        ServiceProvider.startECSEC2WebscraperService(app, "WebscraperService-ECSEC2", stackProps);
-        ServiceProvider.startECSFargateWebscraperService(app,"WebscraperService-ECSFargate", stackProps);
+        ServiceProvider.startALBECSEC2WebscraperService(app, "WebscraperService-ALBECSEC2", stackProps);
+        ServiceProvider.startLambdaAPIGatewayWebscraperService(app,"WebscraperService-LambdaAPIGateway", stackProps);
 
         app.synth();
     }

@@ -1,2 +1,2 @@
 cd ..
-cdk deploy -vv --require-approval never WebscraperService-ECSEC2
+cdk deploy -vv --require-approval never WebscraperService-ALBECSEC2
