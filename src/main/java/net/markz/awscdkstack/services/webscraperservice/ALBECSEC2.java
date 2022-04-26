@@ -24,6 +24,7 @@ import software.amazon.awscdk.services.ecs.Ec2Service;
 import software.amazon.awscdk.services.ecs.Ec2TaskDefinition;
 import software.amazon.awscdk.services.ecs.EcsOptimizedImage;
 import software.amazon.awscdk.services.ecs.LogDriver;
+import software.amazon.awscdk.services.ecs.NetworkMode;
 import software.amazon.awscdk.services.ecs.PlacementConstraint;
 import software.amazon.awscdk.services.ecs.PortMapping;
 import software.amazon.awscdk.services.elasticloadbalancingv2.AddApplicationTargetGroupsProps;
@@ -53,7 +54,7 @@ public class ALBECSEC2 extends Stack {
                                 SubnetConfiguration
                                         .builder()
                                         .subnetType(SubnetType.PUBLIC)
-                                        .name("MarkZPublicSubnet1Config")
+                                        .name("MarkZPublicSubnetConfig")
                                         .build()
                         )
                 )
@@ -77,6 +78,7 @@ public class ALBECSEC2 extends Stack {
 //                                .spotPrice("0.003") // using free tier now.
                 .keyName("mykey")
                 .healthCheck(software.amazon.awscdk.services.autoscaling.HealthCheck.ec2())
+                .newInstancesProtectedFromScaleIn(false)
                 .build();
 
 
@@ -92,6 +94,7 @@ public class ALBECSEC2 extends Stack {
         final var ec2TaskDefinition = Ec2TaskDefinition
                 .Builder
                 .create(this, "WebscraperService-Ec2TaskDefinition")
+                .networkMode(NetworkMode.HOST)
                 .build();
 
         LogDriver logDriver = LogDriver.awsLogs(
@@ -112,8 +115,7 @@ public class ALBECSEC2 extends Stack {
                         .image(ContainerImage.fromRegistry("zdy120939259/web-scraper-service:latest"))
                         .portMappings(Collections.singletonList(PortMapping
                                 .builder()
-                                .containerPort(8080)
-                                .hostPort(80)
+                                .containerPort(80)
                                 .build()))
                         .memoryLimitMiB(925)
                         .logging(logDriver)
