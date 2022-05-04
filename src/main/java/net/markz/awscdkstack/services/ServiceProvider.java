@@ -1,16 +1,45 @@
 package net.markz.awscdkstack.services;
 
-import net.markz.awscdkstack.services.webscraperservice.ALBECSEC2;
-import net.markz.awscdkstack.services.webscraperservice.LambdaAPIGateway;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NonNull;
+import net.markz.awscdkstack.iam.IAM;
+import net.markz.awscdkstack.services.portfoliofrontend.PortfolioFrontend;
+import net.markz.awscdkstack.services.webscraperservice.WebscraperService;
 import software.amazon.awscdk.StackProps;
+import software.amazon.awscdk.services.ec2.Vpc;
 import software.constructs.Construct;
 
-public record ServiceProvider() {
-    public static void startALBECSEC2WebscraperService(final Construct scope, final String id, final StackProps props) {
-        new ALBECSEC2(scope, id, props);
+@AllArgsConstructor
+@Builder
+public class ServiceProvider {
+
+
+
+    public void buildWebscraperService(final Construct scope, final String id, final StackProps props) {
+        WebscraperService
+                .builder()
+                .scope(scope)
+                .id(id)
+                .props(props)
+                .build();
     }
 
-    public static void startLambdaAPIGatewayWebscraperService(final Construct scope, final String id, final StackProps props) {
-        new LambdaAPIGateway(scope, id, props);
+    public void buildPortfolioFrontend(final Construct scope, final String id, final StackProps props) {
+        PortfolioFrontend
+                .builder()
+                .scope(scope)
+                .id(id)
+                .props(props)
+                .build();
+    }
+
+    public void buildIAMStuff(final Construct scope, final String id, final StackProps props) {
+        IAM
+                .builder()
+                .scope(scope)
+                .id(id)
+                .props(props)
+                .build();
     }
 }

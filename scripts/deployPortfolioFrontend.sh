@@ -5,4 +5,4 @@ set -e
 clear
 
 cd ..
-yes | cdk destroy -vv --force WebscraperService-ALBECSEC2
+cdk deploy -vv --require-approval never Portfolio-Frontend

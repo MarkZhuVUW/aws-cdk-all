@@ -9,6 +9,7 @@ import software.amazon.awscdk.StackProps;
 public class AwsCliStacksApp {
     public static void main(final String[] args) {
         final App app = new App();
+
         final StackProps stackProps = StackProps.builder()
                 // If you don't specify 'env', this stack will be environment-agnostic.
                 // Account/Region-dependent features and context lookups will not work,
@@ -31,10 +32,53 @@ public class AwsCliStacksApp {
                 // For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
                 .build();
 
-        ServiceProvider.startALBECSEC2WebscraperService(app, "WebscraperService-ALBECSEC2", stackProps);
-        ServiceProvider.startLambdaAPIGatewayWebscraperService(app,"WebscraperService-LambdaAPIGateway", stackProps);
+        final var serviceProvider = ServiceProvider
+                .builder()
+                .build();
+        // Services
+        serviceProvider.buildWebscraperService(app, "WebscraperService-ALBECSEC2", stackProps);
+        serviceProvider.buildPortfolioFrontend(app, "Portfolio-Frontend", stackProps);
+        final var iamApp = new App();
+        serviceProvider.buildIAMStuff(iamApp, "IAM-stuff", stackProps);
 
         app.synth();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

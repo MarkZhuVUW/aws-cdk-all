@@ -5,4 +5,4 @@ set -e
 clear
 
 cd ..
-yes | cdk destroy -vv --force WebscraperService-ALBECSEC2
+yes | cdk destroy -vv --force Portfolio-Frontend
