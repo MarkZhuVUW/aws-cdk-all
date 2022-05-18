@@ -302,11 +302,6 @@ public class WebscraperService extends Stack {
                         .build()
         );
 
-        final var albHttpApiGateway = HttpIntegration
-                .Builder
-                .create("")
-
-                .build();
     }
 
 }

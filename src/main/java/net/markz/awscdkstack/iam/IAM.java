@@ -52,8 +52,7 @@ public class IAM extends Stack {
                         )
                 )
                 .build();
-        // Retain this user when we destroy the stack
-        updateRole.applyRemovalPolicy(RemovalPolicy.RETAIN);
+
         updateRole.attachInlinePolicy(new Policy(this, "ECSS3UpdateRolePolicy",
                 PolicyProps
                         .builder()
@@ -80,8 +79,7 @@ public class IAM extends Stack {
                         ))
                         .build()
         ));
-        // Retain this user when we destroy the stack
-        assumeRolePracticeUser.applyRemovalPolicy(RemovalPolicy.RETAIN);
+
         assumeRolePracticeUser.attachInlinePolicy(
                 new Policy(this, "AssumeRoleUserPolicy",
                         PolicyProps

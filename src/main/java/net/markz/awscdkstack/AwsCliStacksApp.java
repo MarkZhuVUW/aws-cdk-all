@@ -32,14 +32,10 @@ public class AwsCliStacksApp {
                 // For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
                 .build();
 
-        final var serviceProvider = ServiceProvider
-                .builder()
-                .build();
         // Services
-        serviceProvider.buildWebscraperService(app, "WebscraperService-ALBECSEC2", stackProps);
-        serviceProvider.buildPortfolioFrontend(app, "Portfolio-Frontend", stackProps);
-        final var iamApp = new App();
-        serviceProvider.buildIAMStuff(iamApp, "IAM-stuff", stackProps);
+        ServiceProvider.buildWebscraperService(app, "WebscraperService-ALBECSEC2", stackProps);
+        ServiceProvider.buildPortfolioFrontend(app, "Portfolio-Frontend", stackProps);
+        ServiceProvider.buildIAMStuff(app, "IAM-stuff", stackProps);
 
         app.synth();
     }
