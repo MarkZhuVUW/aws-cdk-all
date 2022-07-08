@@ -4,12 +4,17 @@ import lombok.AllArgsConstructor;
 import net.markz.awscdkstack.constants.AWSConstants;
 import net.markz.awscdkstack.constants.NetworkConstants;
 import net.markz.awscdkstack.nestedstacks.MarkZVPC;
+import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.NestedStackProps;
 import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
-import software.amazon.awscdk.services.apigateway.HttpIntegration;
 import software.amazon.awscdk.services.autoscaling.AutoScalingGroup;
+import software.amazon.awscdk.services.dynamodb.Attribute;
+import software.amazon.awscdk.services.dynamodb.AttributeType;
+import software.amazon.awscdk.services.dynamodb.BillingMode;
+import software.amazon.awscdk.services.dynamodb.Table;
+import software.amazon.awscdk.services.dynamodb.TableClass;
 import software.amazon.awscdk.services.ec2.InstanceClass;
 import software.amazon.awscdk.services.ec2.InstanceSize;
 import software.amazon.awscdk.services.ec2.InstanceType;
@@ -30,6 +35,7 @@ import software.amazon.awscdk.services.ecs.LogDriver;
 import software.amazon.awscdk.services.ecs.NetworkMode;
 import software.amazon.awscdk.services.ecs.PlacementConstraint;
 import software.amazon.awscdk.services.ecs.PortMapping;
+import software.amazon.awscdk.services.elasticache.CfnReplicationGroup;
 import software.amazon.awscdk.services.elasticloadbalancingv2.AddApplicationTargetGroupsProps;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationListenerProps;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationLoadBalancer;
@@ -43,6 +49,8 @@ import software.amazon.awscdk.services.elasticloadbalancingv2.Protocol;
 import software.amazon.awscdk.services.elasticloadbalancingv2.RedirectOptions;
 import software.amazon.awscdk.services.logs.LogGroup;
 import software.amazon.awscdk.services.logs.RetentionDays;
+import software.amazon.awscdk.services.sqs.DeadLetterQueue;
+import software.amazon.awscdk.services.sqs.Queue;
 import software.constructs.Construct;
 
 import java.util.List;
@@ -90,6 +98,7 @@ public class WebscraperService extends Stack {
                 .allowAllOutbound(true)
                 .build();
 
+
         // currently only myself can access the ALB.
         albSG.addIngressRule(Peer.ipv4(NetworkConstants.MY_IP_1.getStr()), Port.allTcp());
         albSG.addIngressRule(Peer.ipv4(NetworkConstants.MY_IP_2.getStr()), Port.allTcp());
@@ -101,7 +110,7 @@ public class WebscraperService extends Stack {
                 .vpc(markZVpc)
                 .build();
 
-
+        cluster.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         final var asg = AutoScalingGroup
                 .Builder
@@ -123,7 +132,7 @@ public class WebscraperService extends Stack {
                 .associatePublicIpAddress(true)
                 .build();
 
-
+        asg.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         final var asgCapacityProvider = AsgCapacityProvider
                 .Builder
@@ -178,6 +187,7 @@ public class WebscraperService extends Stack {
                         )
                         .build()
         );
+
         ec2TaskDefinition.addContainer("WebscraperService-Ec2TaskDefinition-SeleniumRemoteChromeDriverService-Container",
                 ContainerDefinitionOptions
                         .builder()
@@ -201,6 +211,8 @@ public class WebscraperService extends Stack {
                         .build()
         );
 
+        ec2TaskDefinition.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
         final var defaultCPS = CapacityProviderStrategy
                 .builder()
                 .capacityProvider(asgCapacityProvider.getCapacityProviderName())
@@ -218,6 +230,7 @@ public class WebscraperService extends Stack {
                 .placementConstraints(List.of(PlacementConstraint.distinctInstances()))
                 .build();
 
+        ec2Service.applyRemovalPolicy(RemovalPolicy.SNAPSHOT);
         // Add an alb that listen to the ASG
         final var alb = ApplicationLoadBalancer
                 .Builder
@@ -302,6 +315,57 @@ public class WebscraperService extends Stack {
                         .build()
         );
 
+        final var onlineShoppingItems = Table
+                .Builder
+                .create(this, "WebscraperService-DynamoDB-OnlineShoppingItemsTable")
+                .billingMode(BillingMode.PAY_PER_REQUEST)
+                .timeToLiveAttribute("ttl")
+                .sortKey(Attribute.builder().name("SK").type(AttributeType.STRING).build())
+                .partitionKey(Attribute.builder().name("PK").type(AttributeType.STRING).build())
+                .tableClass(TableClass.STANDARD_INFREQUENT_ACCESS)
+//                .readCapacity(1L)
+//                .writeCapacity(1L)
+                .tableName(AWSConstants.WEBSCRAPERSERVICE_DYNAMODB_TABLE_ONLINESHOPPINGITEMS.getStr())
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .build();
+
+        final var dlq = Queue
+                .Builder
+                .create(this, "WebscraperService-SQS-DLQ")
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .queueName(AWSConstants.WEBSCRAPERSERVICE_SQS_DLQ_NAME.getStr())
+                .visibilityTimeout(Duration.seconds(
+                        Integer.parseInt(AWSConstants.WEBSCRAPERSERVICE_SQS_VISIBILITY_TIMEOUT_SECONDS.getStr())
+                ))
+
+                .build();
+
+        final var queue = Queue
+                .Builder
+                .create(this, "WebscraperService-SQS-Queue")
+                .removalPolicy(RemovalPolicy.DESTROY)
+                .queueName(AWSConstants.WEBSCRAPERSERVICE_SQS_QUEUE_NAME.getStr())
+                .visibilityTimeout(Duration.seconds(
+                        Integer.parseInt(AWSConstants.WEBSCRAPERSERVICE_SQS_VISIBILITY_TIMEOUT_SECONDS.getStr())
+                ))
+                .deadLetterQueue(
+                        DeadLetterQueue
+                                .builder()
+                                .queue(dlq)
+                                .maxReceiveCount(10)
+                                .build()
+                )
+                .build();
+
+//        final var redisCluster = CfnReplicationGroup
+//                .Builder
+//                .create(this, "WebscraperService-RedisCluster")
+//                .port(1234)
+//                .engine("redis")
+//                .automaticFailoverEnabled(false)
+//                .cacheNodeType("cache.t4g.micro")
+//                .
+//                .build();
     }
 
 }

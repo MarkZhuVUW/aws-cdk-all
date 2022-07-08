@@ -4,8 +4,6 @@ import lombok.Getter;
 import software.amazon.awscdk.NestedStack;
 import software.amazon.awscdk.NestedStackProps;
 import software.amazon.awscdk.RemovalPolicy;
-import software.amazon.awscdk.Stack;
-import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.ec2.FlowLogDestination;
 import software.amazon.awscdk.services.ec2.FlowLogOptions;
 import software.amazon.awscdk.services.ec2.FlowLogTrafficType;
@@ -57,6 +55,8 @@ public class MarkZVPC extends NestedStack {
                                 .build()
                 ))
                 .build();
+
+        markZVpc.applyRemovalPolicy(RemovalPolicy.DESTROY);
 
         //        final var networkAcl = NetworkAcl
 //                .Builder
