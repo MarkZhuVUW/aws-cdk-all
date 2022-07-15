@@ -35,7 +35,6 @@ import software.amazon.awscdk.services.ecs.LogDriver;
 import software.amazon.awscdk.services.ecs.NetworkMode;
 import software.amazon.awscdk.services.ecs.PlacementConstraint;
 import software.amazon.awscdk.services.ecs.PortMapping;
-import software.amazon.awscdk.services.elasticache.CfnReplicationGroup;
 import software.amazon.awscdk.services.elasticloadbalancingv2.AddApplicationTargetGroupsProps;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationListenerProps;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationLoadBalancer;
@@ -334,10 +333,10 @@ public class WebscraperService extends Stack {
                 .create(this, "WebscraperService-SQS-DLQ")
                 .removalPolicy(RemovalPolicy.DESTROY)
                 .queueName(AWSConstants.WEBSCRAPERSERVICE_SQS_DLQ_NAME.getStr())
-                .visibilityTimeout(Duration.seconds(
-                        Integer.parseInt(AWSConstants.WEBSCRAPERSERVICE_SQS_VISIBILITY_TIMEOUT_SECONDS.getStr())
+                .visibilityTimeout(Duration.minutes(
+                        Integer.parseInt(AWSConstants.WEBSCRAPERSERVICE_SQS_VISIBILITY_TIMEOUT_MINUTES.getStr())
                 ))
-
+                .receiveMessageWaitTime(Duration.seconds(20))
                 .build();
 
         final var queue = Queue
@@ -345,8 +344,8 @@ public class WebscraperService extends Stack {
                 .create(this, "WebscraperService-SQS-Queue")
                 .removalPolicy(RemovalPolicy.DESTROY)
                 .queueName(AWSConstants.WEBSCRAPERSERVICE_SQS_QUEUE_NAME.getStr())
-                .visibilityTimeout(Duration.seconds(
-                        Integer.parseInt(AWSConstants.WEBSCRAPERSERVICE_SQS_VISIBILITY_TIMEOUT_SECONDS.getStr())
+                .visibilityTimeout(Duration.minutes(
+                        Integer.parseInt(AWSConstants.WEBSCRAPERSERVICE_SQS_VISIBILITY_TIMEOUT_MINUTES.getStr())
                 ))
                 .deadLetterQueue(
                         DeadLetterQueue
@@ -355,6 +354,7 @@ public class WebscraperService extends Stack {
                                 .maxReceiveCount(10)
                                 .build()
                 )
+                .receiveMessageWaitTime(Duration.seconds(20))
                 .build();
 
 //        final var redisCluster = CfnReplicationGroup
